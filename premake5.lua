@@ -44,9 +44,15 @@ includedirs {
   -- System level ROS includes
   "%{root}/_build/target-deps/system_ros/include/std_msgs",
 
+  "%{root}/_build/target-deps/system_ros/include/sensor_msgs",
+
   "%{root}/_build/target-deps/system_ros/include/geometry_msgs",
 
+  "%{root}/_build/target-deps/system_ros/include/builtin_interfaces",
+
   "%{root}/_build/target-deps/system_ros/include/rosidl_runtime_c",
+
+  "%{root}/_build/target-deps/system_ros/include/rosidl_runtime_cpp",
 
   "%{root}/_build/target-deps/system_ros/include/rosidl_typesupport_interface",
 
@@ -71,6 +77,7 @@ links {
 
   -- For the simple string message, add the deps
   "std_msgs__rosidl_typesupport_c", "std_msgs__rosidl_generator_c",
+  "sensor_msgs__rosidl_typesupport_c", "sensor_msgs__rosidl_generator_c",
 }
 
 

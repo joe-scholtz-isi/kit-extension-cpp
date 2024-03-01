@@ -116,7 +116,6 @@ public:
 
     // Destroy the ROS message published to release the memory it used
     std_msgs__msg__String__destroy(ros_msg);
-    /*
     sensor_msgs__msg__PointCloud2 *ros_msg_pcl =
         sensor_msgs__msg__PointCloud2__create();
 
@@ -135,12 +134,18 @@ public:
         static_cast<sensor_msgs__msg__PointField *>(malloc(
             ros_msg_pcl->fields.size * sizeof(sensor_msgs__msg__PointField)));
 
+    // NOTE: works up to here
     const char *xCString = "x";
+    std::string xString = "x";
     const char *yCString = "y";
     const char *zCString = "z";
     const char *iCString = "intensity";
-    rosidl_runtime_c__String__assign(&ros_msg_pcl->fields.data[0].name,
-                                     xCString);
+    // rosidl_runtime_c__String__assign(&ros_msg_pcl->fields.data[0].name,
+    // xCString);
+    // rosidl_runtime_c__String__assign(&ros_msg_pcl->fields.data[0].name,
+    // xString.c_str());
+    free(ros_msg_pcl->fields.data);
+    /*
     rosidl_runtime_c__String__assign(&ros_msg_pcl->fields.data[1].name,
                                      yCString);
     rosidl_runtime_c__String__assign(&ros_msg_pcl->fields.data[2].name,
@@ -174,6 +179,8 @@ public:
       ros_msg_pcl->data.data[i] =
           i % 256; // Just an example, replace with your actual data
     }
+    // BUG: CRASHES BEFORE THIS POINT
+
     // rcl_ret_t rc;
     rc = rcl_publish(&state.my_pub_pcl, ros_msg_pcl, NULL);
     if (rc != RCL_RET_OK) {
@@ -187,6 +194,7 @@ public:
     free(ros_msg_pcl->data.data);
     sensor_msgs__msg__PointCloud2__destroy(ros_msg_pcl);
      */
+
     // Returning true tells Omnigraph that the compute was successful and
     // the output value is now valid.
     return true;

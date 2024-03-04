@@ -7,6 +7,10 @@
 // license agreement from NVIDIA CORPORATION is strictly prohibited.
 //
 #include <ROS2RTXLiDARPublishPointCloudNodeDatabase.h>
+#include <cstddef>
+#include <cstdio>
+#include <cstdlib>
+#include <cstring>
 #include <string>
 
 // In this example, we will publish a string message with an OmniGraph Node
@@ -116,6 +120,7 @@ public:
 
     // Destroy the ROS message published to release the memory it used
     std_msgs__msg__String__destroy(ros_msg);
+
     sensor_msgs__msg__PointCloud2 *ros_msg_pcl =
         sensor_msgs__msg__PointCloud2__create();
 
@@ -129,22 +134,26 @@ public:
     ros_msg_pcl->height = 1;
     ros_msg_pcl->width = 2; // TODO: Change to size of point cloud
 
-    ros_msg_pcl->fields.size = 4;
-    ros_msg_pcl->fields.data =
-        static_cast<sensor_msgs__msg__PointField *>(malloc(
-            ros_msg_pcl->fields.size * sizeof(sensor_msgs__msg__PointField)));
+    ros_msg_pcl->fields.size = static_cast<size_t>(
+        1 * sizeof(sensor_msgs__msg__PointField)); // TODO: correct to 4
+    ros_msg_pcl->fields.capacity = ros_msg_pcl->fields.size;
+    ros_msg_pcl->fields.data = static_cast<sensor_msgs__msg__PointField *>(
+        malloc(ros_msg_pcl->fields.capacity));
 
-    // NOTE: works up to here
-    const char *xCString = "x";
     std::string xString = "x";
-    const char *yCString = "y";
-    const char *zCString = "z";
-    const char *iCString = "intensity";
+    ros_msg_pcl->fields.data[0].name.size =
+        static_cast<size_t>(sizeof(char) * (strlen(xString.c_str())));
+    ros_msg_pcl->fields.data[0].name.capacity =
+        static_cast<size_t>(2 * sizeof(char) * (strlen(xString.c_str())));
+    ros_msg_pcl->fields.data[0].name.data =
+        static_cast<char *>(malloc(ros_msg_pcl->fields.data[0].name.capacity));
+    strcpy(ros_msg_pcl->fields.data[0].name.data, xString.c_str());
+    //*(ros_msg_pcl->fields.data[0].name.data) = 'x';
     // rosidl_runtime_c__String__assign(&ros_msg_pcl->fields.data[0].name,
     // xCString);
-    // rosidl_runtime_c__String__assign(&ros_msg_pcl->fields.data[0].name,
+    // rosidl_runtime_c__String__assign(&(ros_msg_pcl->fields.data[0].name),
     // xString.c_str());
-    free(ros_msg_pcl->fields.data);
+    // NOTE: works up to here
     /*
     rosidl_runtime_c__String__assign(&ros_msg_pcl->fields.data[1].name,
                                      yCString);
@@ -152,7 +161,7 @@ public:
                                      zCString);
     rosidl_runtime_c__String__assign(&ros_msg_pcl->fields.data[3].name,
                                      iCString);
-
+    */
     int offset = 0;
     // All offsets are *4, as all field data types are float32
     for (size_t d = 0; d < ros_msg_pcl->fields.size; ++d, offset += 4) {
@@ -179,24 +188,21 @@ public:
       ros_msg_pcl->data.data[i] =
           i % 256; // Just an example, replace with your actual data
     }
-    // BUG: CRASHES BEFORE THIS POINT
 
     // rcl_ret_t rc;
     rc = rcl_publish(&state.my_pub_pcl, ros_msg_pcl, NULL);
     if (rc != RCL_RET_OK) {
-      // RCL_RET_PUBLISHER_INVALID is returned initially and then the message
-      // gets published
+      // RCL_RET_PUBLISHER_INVALID is returnedinitially initially and then the
+      // message gets published
       return false;
     }
 
     // Destroy the ROS message published to release the memory it used
-    free(ros_msg_pcl->fields.data);
-    free(ros_msg_pcl->data.data);
     sensor_msgs__msg__PointCloud2__destroy(ros_msg_pcl);
-     */
 
-    // Returning true tells Omnigraph that the compute was successful and
-    // the output value is now valid.
+    // Returning true tells Omnigraph that the
+    // compute was successful and the output
+    // value is now valid.
     return true;
   }
 

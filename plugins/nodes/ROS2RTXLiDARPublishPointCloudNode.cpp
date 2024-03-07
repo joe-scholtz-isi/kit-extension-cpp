@@ -8,7 +8,7 @@
 //
 #include <ROS2RTXLiDARPublishPointCloudNodeDatabase.h>
 
-// In this example, we will publish a string message with an OmniGraph Node
+// ROS messages includes
 #include "rosidl_runtime_c/primitives_sequence_functions.h"
 #include "rosidl_runtime_c/string_functions.h"
 #include "sensor_msgs/msg/detail/point_field__functions.h"
@@ -35,6 +35,7 @@ public:
     auto &state = db.internalState<ROS2RTXLiDARPublishPointCloudNode>();
 
     if (!state.pub_created) {
+      // Initialization for ros publisher
       rcl_context_t context = rcl_get_zero_initialized_context();
       rcl_init_options_t init_options = rcl_get_zero_initialized_init_options();
       rcl_allocator_t allocator = rcl_get_default_allocator();

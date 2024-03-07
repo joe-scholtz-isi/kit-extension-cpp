@@ -3,7 +3,7 @@
         "version": 1,
         "icon": "icons/isaac-sim.svg",
         "description": [
-            "This node publishes the given string as a ROS message"
+            "This node publishes PointCloud2 ROS messages"
         ],
         "metadata": {
             "uiName": "ROS2 RTX LiDAR Publish Point Cloud Node with Intensity"

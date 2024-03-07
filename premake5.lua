@@ -82,4 +82,5 @@ links {
 
 
 filter { "system:linux" }
+includedirs { "%{target_deps}/python/include/python3.10" }
 linkoptions { "-Wl,--export-dynamic" }

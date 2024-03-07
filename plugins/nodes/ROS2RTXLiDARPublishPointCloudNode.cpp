@@ -7,19 +7,18 @@
 // license agreement from NVIDIA CORPORATION is strictly prohibited.
 //
 #include <ROS2RTXLiDARPublishPointCloudNodeDatabase.h>
-#include <cstddef>
-#include <cstdio>
-#include <cstdlib>
-#include <cstring>
-#include <string>
 
 // In this example, we will publish a string message with an OmniGraph Node
+#include "rosidl_runtime_c/primitives_sequence_functions.h"
 #include "rosidl_runtime_c/string_functions.h"
+#include "sensor_msgs/msg/detail/point_field__functions.h"
 #include "sensor_msgs/msg/point_cloud2.h"
 #include "std_msgs/msg/header.h"
 #include "std_msgs/msg/string.h"
+#include <string>
 
-// ROS includes for creating nodes, publishers etc.
+//  ROS includes for creating nodes, publishers etc.
+#include "rcl/error_handling.h"
 #include "rcl/rcl.h"
 
 // Helpers to explicit shorten names you know you will use
@@ -65,21 +64,6 @@ public:
         return false;
       }
 
-      const char *topic_name = "my_string";
-
-      const rosidl_message_type_support_t *my_type_support =
-          ROSIDL_GET_MSG_TYPE_SUPPORT(std_msgs, msg, String);
-
-      rcl_publisher_options_t pub_options = rcl_publisher_get_default_options();
-
-      // Initialize Publisher
-      rc = rcl_publisher_init(&state.my_pub, &my_node, my_type_support,
-                              topic_name, &pub_options);
-      if (RCL_RET_OK != rc) {
-        printf("Error in rcl_publisher_init %s.\n", topic_name);
-        return false;
-      }
-
       std::string topic_name_string_pcl = db.inputs.topicName();
       const char *topic_name_pcl = topic_name_string_pcl.c_str();
 
@@ -93,7 +77,7 @@ public:
       rc = rcl_publisher_init(&state.my_pub_pcl, &my_node, my_type_support_pcl,
                               topic_name_pcl, &pub_options_pcl);
       if (RCL_RET_OK != rc) {
-        printf("Error in rcl_publisher_init %s.\n", topic_name);
+        printf("Error in rcl_publisher_init %s.\n", topic_name_pcl);
         return false;
       }
       // Node, publisher was successfully created
@@ -101,25 +85,8 @@ public:
 
       return true;
     }
-
-    std_msgs__msg__String *ros_msg = std_msgs__msg__String__create();
-
-    // Get the string to be published
-    std::string msg = db.inputs.frameId();
-
-    // Assign our ros message the data from this string
-    rosidl_runtime_c__String__assign(&ros_msg->data, msg.c_str());
-
-    rcl_ret_t rc;
-    rc = rcl_publish(&state.my_pub, ros_msg, NULL);
-    if (rc != RCL_RET_OK) {
-      // RCL_RET_PUBLISHER_INVALID is returned initially and then the message
-      // gets published
-      return false;
-    }
-
-    // Destroy the ROS message published to release the memory it used
-    std_msgs__msg__String__destroy(ros_msg);
+    if (!db.inputs.enabled())
+      return true;
 
     sensor_msgs__msg__PointCloud2 *ros_msg_pcl =
         sensor_msgs__msg__PointCloud2__create();
@@ -134,36 +101,26 @@ public:
     ros_msg_pcl->height = 1;
     ros_msg_pcl->width = 2; // TODO: Change to size of point cloud
 
-    ros_msg_pcl->fields.size = static_cast<size_t>(
-        1 * sizeof(sensor_msgs__msg__PointField)); // TODO: correct to 4
-    ros_msg_pcl->fields.capacity = ros_msg_pcl->fields.size;
-    ros_msg_pcl->fields.data = static_cast<sensor_msgs__msg__PointField *>(
-        malloc(ros_msg_pcl->fields.capacity));
+    // sensor_msgs__msg__PointField__Sequence *ptFieldSeq =
+    // sensor_msgs__msg__PointField__Sequence__create( 4 *
+    // sizeof(sensor_msgs__msg__PointField));
+
+    sensor_msgs__msg__PointField__Sequence__init(&(ros_msg_pcl->fields), 4);
 
     std::string xString = "x";
-    ros_msg_pcl->fields.data[0].name.size =
-        static_cast<size_t>(sizeof(char) * (strlen(xString.c_str())));
-    ros_msg_pcl->fields.data[0].name.capacity =
-        static_cast<size_t>(2 * sizeof(char) * (strlen(xString.c_str())));
-    ros_msg_pcl->fields.data[0].name.data =
-        static_cast<char *>(malloc(ros_msg_pcl->fields.data[0].name.capacity));
-    strcpy(ros_msg_pcl->fields.data[0].name.data, xString.c_str());
-    //*(ros_msg_pcl->fields.data[0].name.data) = 'x';
-    // rosidl_runtime_c__String__assign(&ros_msg_pcl->fields.data[0].name,
-    // xCString);
-    // rosidl_runtime_c__String__assign(&(ros_msg_pcl->fields.data[0].name),
-    // xString.c_str());
-    // NOTE: works up to here
-    /*
-    rosidl_runtime_c__String__assign(&ros_msg_pcl->fields.data[1].name,
-                                     yCString);
-    rosidl_runtime_c__String__assign(&ros_msg_pcl->fields.data[2].name,
-                                     zCString);
-    rosidl_runtime_c__String__assign(&ros_msg_pcl->fields.data[3].name,
-                                     iCString);
-    */
+    std::string yString = "y";
+    std::string zString = "z";
+    std::string iString = "intensity";
+    rosidl_runtime_c__String__assign(&(ros_msg_pcl->fields.data[0].name),
+                                     xString.c_str());
+    rosidl_runtime_c__String__assign(&(ros_msg_pcl->fields.data[1].name),
+                                     yString.c_str());
+    rosidl_runtime_c__String__assign(&(ros_msg_pcl->fields.data[2].name),
+                                     zString.c_str());
+    rosidl_runtime_c__String__assign(&(ros_msg_pcl->fields.data[3].name),
+                                     iString.c_str());
     int offset = 0;
-    // All offsets are *4, as all field data types are float32
+    // All offsets are 4, as all field data types are float32
     for (size_t d = 0; d < ros_msg_pcl->fields.size; ++d, offset += 4) {
       ros_msg_pcl->fields.data[d].offset = offset;
       ros_msg_pcl->fields.data[d].datatype =
@@ -174,22 +131,17 @@ public:
     ros_msg_pcl->is_bigendian = false;
     ros_msg_pcl->point_step = offset;
     ros_msg_pcl->row_step = ros_msg_pcl->point_step * ros_msg_pcl->width;
+    rosidl_runtime_c__uint8__Sequence__init(
+        &(ros_msg_pcl->data), ros_msg_pcl->row_step * ros_msg_pcl->height);
 
-    ros_msg_pcl->data.size = ros_msg_pcl->row_step * ros_msg_pcl->height;
-    ros_msg_pcl->data.data = static_cast<uint8_t *>(
-        malloc(ros_msg_pcl->data.size * sizeof(uint8_t)));
-
-    ros_msg_pcl->fields.data =
-        static_cast<sensor_msgs__msg__PointField *>(malloc(
-            ros_msg_pcl->fields.size * sizeof(sensor_msgs__msg__PointField)));
-
-    ros_msg_pcl->is_dense = false;
     for (size_t i = 0; i < ros_msg_pcl->data.size; ++i) {
       ros_msg_pcl->data.data[i] =
           i % 256; // Just an example, replace with your actual data
     }
+    ros_msg_pcl->is_dense = false;
 
     // rcl_ret_t rc;
+    rcl_ret_t rc;
     rc = rcl_publish(&state.my_pub_pcl, ros_msg_pcl, NULL);
     if (rc != RCL_RET_OK) {
       // RCL_RET_PUBLISHER_INVALID is returnedinitially initially and then the
@@ -207,7 +159,6 @@ public:
   }
 
 private:
-  rcl_publisher_t my_pub;
   rcl_publisher_t my_pub_pcl;
   bool pub_created{false};
 };

@@ -21,12 +21,12 @@
             },
             "context" : {
                 "type" : "uint64",
-                "description": "ROS2 context handle, default of zero will use the global context",
+                "description": "HAVE TO BE IMPLEMENTED. ROS2 context handle, default of zero will use the global context",
                 "default" : 0
             },
             "nodeNamespace" : {
                 "type" : "string",
-                "description" : "Namespace of ROS2 Node, prepends and published/subscribed topic by the node namespace",
+                "description" : "HAVE TO BE IMPLEMENTED. Namespace of ROS2 Node, prepends and published/subscribed topic by the node namespace",
                 "default" : ""
             },
             "frameId": { 
@@ -37,37 +37,26 @@
             "topicName": {
                 "type" : "string",
                 "description" : "Topic name for sensor data",
-                "default" : "scan"
+                "default" : "point_cloud"
             },
             "queueSize" : {
                 "type" : "uint64",
-                "description" : "Number of message to queue up before throwing away, in case messages are collected faster than they can be sent",
+                "description" : "HAVE TO BE IMPLEMENTED. Number of message to queue up before throwing away, in case messages are collected faster than they can be sent",
                 "default" : 10
             },
             "renderProductPath" : {
                 "type" : "token",
                 "description" : "Name of the render product path to publish lidar data"
             },
-            "type": {
-                "type": "token",
-                "description": "Data to publish from node",
-                "metadata": {
-                    "allowedTokens": {
-                        "laser_scan": "laser_scan",
-                        "point_cloud": "point_cloud"
-                    }
-                },
-                "default": "laser_scan"
-            },
             "resetSimulationTimeOnStop": {
                 "type": "bool",
-                "description": "If True the simulation time will reset when stop is pressed, False means time increases monotonically",
+                "description": "HAVE TO BE IMPLEMENTED. If True the simulation time will reset when stop is pressed, False means time increases monotonically",
                 "uiName": "Reset Time On Stop",
                 "default": false
             },
             "fullScan": {
                 "type": "bool",
-                "description": "If True publish a full scan when enough data has accumulated instead of partial scans each frame. Supports point cloud type only",
+                "description": "HAVE TO BE IMPLEMENTED. If True publish a full scan when enough data has accumulated instead of partial scans each frame. Supports point cloud type only",
                 "uiName": "Publish Full Scan",
                 "default": false
             }

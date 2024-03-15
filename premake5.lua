@@ -2,11 +2,14 @@
 local ext = get_current_extension_info()
 project_ext(ext)
 
-
 -- --------------------------------------------------------------------------------------------------------------
 -- Helper variable containing standard configuration information for projects containing OGN files.
 local ogn = get_ogn_project_information(ext, "omni/isaac/ros2_cpp_custom_og_node")
 
+
+-- --------------------------------------------------------------------------------------------------------------------
+-- Put this project into the "omnigraph" IDE group
+ext.group = "omnigraph"
 
 -- --------------------------------------------------------------------------------------------------------------
 -- Link folders that should be packaged with the extension.
@@ -14,7 +17,6 @@ repo_build.prebuild_link {
   { "data", ext.target_dir .. "/data" },
   { "docs", ext.target_dir .. "/docs" },
 }
-
 
 -- --------------------------------------------------------------------------------------------------------------
 -- Copy the __init__.py to allow building of a non-linked ogn/ import directory.
@@ -26,9 +28,7 @@ repo_build.prebuild_copy {
 
 -- --------------------------------------------------------------------------------------------------------------
 -- Breaking this out as a separate project ensures the .ogn files are processed before their results are needed.
-project_ext_ogn(ext, ogn)
-
-
+project_ext_ogn(ext, ogn, { toc = "docs/Overview.md" })
 
 -- --------------------------------------------------------------------------------------------------------------
 -- Build the C++ plugin that will be loaded by the extension.
@@ -36,9 +36,14 @@ project_ext_plugin(ext, ogn.plugin_project)
 -- It is important that you add all subdirectories containing C++ code to this project
 add_files("source", "plugins/" .. ogn.module)
 add_files("nodes", "plugins/nodes")
+add_files("python/nodes", "python/nodes")
+add_files("config", "config")
+add_files("docs", "docs")
+add_files("data", "data")
 
 -- Add the standard dependencies all OGN projects have; includes, libraries to link, and required compiler flags
-add_ogn_dependencies(ogn)
+-- add_ogn_dependencies(ogn)
+add_ogn_dependencies(ogn, { "python/nodes" })
 
 includedirs {
   -- System level ROS includes

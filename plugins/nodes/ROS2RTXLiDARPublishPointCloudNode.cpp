@@ -15,6 +15,9 @@
 #include "sensor_msgs/msg/point_cloud2.h"
 #include "std_msgs/msg/header.h"
 #include "std_msgs/msg/string.h"
+#include <cmath>
+#include <cstddef>
+#include <cstdint>
 #include <string>
 
 //  ROS includes for creating nodes, publishers etc.
@@ -58,8 +61,10 @@ public:
       // create rcl_node
       rcl_node_t my_node = rcl_get_zero_initialized_node();
       rcl_node_options_t node_ops = rcl_node_get_default_options();
-      rc =
-          rcl_node_init(&my_node, "node_0", "custom_node", &context, &node_ops);
+      std::string node_namespace_string_pcl = db.inputs.nodeNamespace();
+      const char *node_namespace_pcl = node_namespace_string_pcl.c_str();
+      rc = rcl_node_init(&my_node, "ROS2RTXLiDARPublishPointCloudNode_0",
+                         node_namespace_pcl, &context, &node_ops);
       if (rc != RCL_RET_OK) {
         printf("Error in rcl_node_init\n");
         return false;
@@ -89,22 +94,31 @@ public:
     if (!db.inputs.enabled())
       return true;
 
+    // const omni::graph::core::ogn::const_array <float>
+    auto input_x = db.inputs.x();
+    auto input_y = db.inputs.y();
+    auto input_z = db.inputs.z();
+    auto input_intensity = db.inputs.intensity();
+
+    uint32_t width = static_cast<uint32_t>(
+        std::min({input_x.size(), input_y.size(), input_z.size(),
+                  input_intensity.size()}));
+
     sensor_msgs__msg__PointCloud2 *ros_msg_pcl =
         sensor_msgs__msg__PointCloud2__create();
 
-    // Assign our ros message the data from this string
-    ros_msg_pcl->header.stamp.sec = 0;
-    ros_msg_pcl->header.stamp.nanosec = 0;
+    double timestamp = db.inputs.timestamp();
+    auto sec = std::floor(timestamp);
+    auto nsec = 1e9 * (timestamp - sec);
+    ros_msg_pcl->header.stamp.sec = static_cast<uint32_t>(sec);
+    ros_msg_pcl->header.stamp.nanosec = static_cast<uint32_t>(nsec);
+
     std::string frameId = db.inputs.frameId();
     rosidl_runtime_c__String__assign(&ros_msg_pcl->header.frame_id,
                                      frameId.c_str());
 
     ros_msg_pcl->height = 1;
-    ros_msg_pcl->width = 2; // TODO: Change to size of point cloud
-
-    // sensor_msgs__msg__PointField__Sequence *ptFieldSeq =
-    // sensor_msgs__msg__PointField__Sequence__create( 4 *
-    // sizeof(sensor_msgs__msg__PointField));
+    ros_msg_pcl->width = width;
 
     sensor_msgs__msg__PointField__Sequence__init(&(ros_msg_pcl->fields), 4);
 
@@ -135,9 +149,38 @@ public:
     rosidl_runtime_c__uint8__Sequence__init(
         &(ros_msg_pcl->data), ros_msg_pcl->row_step * ros_msg_pcl->height);
 
-    for (size_t i = 0; i < ros_msg_pcl->data.size; ++i) {
-      ros_msg_pcl->data.data[i] =
-          i % 256; // Just an example, replace with your actual data
+    // Type punning using union have undefined behavior with undefined float
+    // size
+    assert(CHAR_BIT * sizeof(float) == 32);
+    assert(CHAR_BIT == 8);
+    // Type punning through union
+    union {
+      float floatValue;
+      uint8_t uint8Value[4];
+    } floatToUint8Converter;
+
+    for (size_t point_i = 0; point_i < ros_msg_pcl->width; point_i++) {
+      for (size_t field_i = 0; field_i < ros_msg_pcl->fields.size; field_i++) {
+        for (size_t byte_i = 0; byte_i < 4; byte_i) {
+          switch (field_i % ros_msg_pcl->field.size) {
+          case 0:
+            floatToUint8Converter.floatValue = input_x[point_i];
+            break;
+          case 1:
+            floatToUint8Converter.floatValue = input_y[point_i];
+            break;
+          case 2:
+            floatToUint8Converter.floatValue = input_z[point_i];
+            break;
+          case 3:
+            floatToUint8Converter.floatValue = input_intensity[point_i];
+            break;
+          }
+          ros_msg_pcl->data.data[byte_i + 4 * field_i +
+                                 4 * ros_msg_pcl->fields.size * point_i] =
+              floatToUint8Converter.uint8Value[byte_i];
+        }
+      }
     }
     ros_msg_pcl->is_dense = false;
 

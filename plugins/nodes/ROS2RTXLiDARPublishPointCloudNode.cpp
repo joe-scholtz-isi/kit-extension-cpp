@@ -7,6 +7,7 @@
 // license agreement from NVIDIA CORPORATION is strictly prohibited.
 //
 #include <ROS2RTXLiDARPublishPointCloudNodeDatabase.h>
+#include <carb/logging/Log.h>
 
 // ROS messages includes
 #include "rosidl_runtime_c/primitives_sequence_functions.h"
@@ -18,6 +19,7 @@
 #include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <cstdio>
 #include <string>
 
 //  ROS includes for creating nodes, publishers etc.
@@ -103,6 +105,14 @@ public:
     uint32_t width = static_cast<uint32_t>(
         std::min({input_x.size(), input_y.size(), input_z.size(),
                   input_intensity.size()}));
+    int length = db.inputs.pclLength();
+    CARB_LOG_WARN("ROS2RTXLiDARPublishPointCloudNode");
+    CARB_LOG_WARN("width: %i, length: %i", width, length);
+    CARB_LOG_WARN("x1: %f, x2: %f, x3: %f", input_x[0], input_x[1], input_x[2]);
+
+    if (width < 0 || length < 0) {
+      return true;
+    }
 
     sensor_msgs__msg__PointCloud2 *ros_msg_pcl =
         sensor_msgs__msg__PointCloud2__create();
@@ -157,27 +167,31 @@ public:
     union {
       float floatValue;
       uint8_t uint8Value[4];
-    } floatToUint8Converter;
 
+    } floatToUint8Converter;
     for (size_t point_i = 0; point_i < ros_msg_pcl->width; point_i++) {
+      // if (point_i % 3 != 0) {
+      //   continue;
+      // }
       for (size_t field_i = 0; field_i < ros_msg_pcl->fields.size; field_i++) {
-        for (size_t byte_i = 0; byte_i < 4; byte_i) {
-          switch (field_i % ros_msg_pcl->field.size) {
-          case 0:
-            floatToUint8Converter.floatValue = input_x[point_i];
-            break;
-          case 1:
-            floatToUint8Converter.floatValue = input_y[point_i];
-            break;
-          case 2:
-            floatToUint8Converter.floatValue = input_z[point_i];
-            break;
-          case 3:
-            floatToUint8Converter.floatValue = input_intensity[point_i];
-            break;
-          }
-          ros_msg_pcl->data.data[byte_i + 4 * field_i +
-                                 4 * ros_msg_pcl->fields.size * point_i] =
+        switch (field_i % ros_msg_pcl->fields.size) {
+        case 0:
+          floatToUint8Converter.floatValue = input_x[point_i];
+          break;
+        case 1:
+          floatToUint8Converter.floatValue = input_y[point_i];
+          break;
+        case 2:
+          floatToUint8Converter.floatValue = input_z[point_i];
+          break;
+        case 3:
+          floatToUint8Converter.floatValue = input_intensity[point_i];
+          break;
+        }
+        for (size_t byte_i = 0; byte_i < 4; byte_i++) {
+          size_t data_i =
+              byte_i + 4 * field_i + 4 * ros_msg_pcl->fields.size * point_i;
+          ros_msg_pcl->data.data[data_i] =
               floatToUint8Converter.uint8Value[byte_i];
         }
       }

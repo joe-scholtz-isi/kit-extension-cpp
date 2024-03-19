@@ -81,6 +81,11 @@
                 "description": "PointCloud2 message header timestamp",
                 "uiName": "Timestamp",
                 "default": 0.0
+            },
+            "pclLength" : {
+                "type" : "int",
+                "description" : "Length of point cloud data",
+                "default" : -2
             }
         }
     }

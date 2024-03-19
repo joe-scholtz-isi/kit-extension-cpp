@@ -6,7 +6,7 @@ Tested on Debian-based Linux.
 
 - Git clone the [kit-extension-template-cpp](kit-extension-template-cpp) repository, copy this directory to `source/extensions`
 - Run `kit-extension-template-cpp/build.sh`
-- Add extention build path (`kit-extension-template-cpp/_build/{plataform}/release/exts`) to Isaac Sim Extension Search Paths in Window->Extensions->THIRD PARTY->"Three bar icon ☰"->Settings. And enable the omni.isaac.ros2_cpp_custom_og_node extension inside Isaac Sim going to Window->Extensions->THIRD PARTY. NB.: for me `{plataform}` is `linux-x86_64`.
+- Add extention build path (`kit-extension-template-cpp/_build/{plataform}/release/exts`) to Isaac Sim Extension Search Paths in Window->Extensions->"Three bar icon ☰"->Settings. And enable the omni.isaac.ros2_cpp_custom_og_node extension inside Isaac Sim going to Window->Extensions->THIRD PARTY. NB.: for me `{plataform}` is `linux-x86_64`.
 
 ## Nodes
 

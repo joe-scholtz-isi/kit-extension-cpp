@@ -38,6 +38,7 @@ class ROS2RTXLiDARPublishPointCloudNode {
 public:
   static bool compute(ROS2RTXLiDARPublishPointCloudNodeDatabase &db) {
     auto &state = db.internalState<ROS2RTXLiDARPublishPointCloudNode>();
+    bool verbose = db.inputs.verbose();
 
     if (!state.pub_created) {
       // Initialization for ros publisher
@@ -106,9 +107,13 @@ public:
         std::min({input_x.size(), input_y.size(), input_z.size(),
                   input_intensity.size()}));
     int length = db.inputs.pclLength();
-    CARB_LOG_WARN("ROS2RTXLiDARPublishPointCloudNode");
-    CARB_LOG_WARN("width: %i, length: %i", width, length);
-    CARB_LOG_WARN("x1: %f, x2: %f, x3: %f", input_x[0], input_x[1], input_x[2]);
+
+    if (verbose) {
+      CARB_LOG_WARN("ROS2RTXLiDARPublishPointCloudNode");
+      CARB_LOG_WARN("width: %i, length: %i", width, length);
+      CARB_LOG_WARN("x1: %f, x2: %f, x3: %f", input_x[0], input_x[1],
+                    input_x[2]);
+    }
 
     if (width < 0 || length < 0) {
       return true;
@@ -159,8 +164,9 @@ public:
     rosidl_runtime_c__uint8__Sequence__init(
         &(ros_msg_pcl->data), ros_msg_pcl->row_step * ros_msg_pcl->height);
 
-    // Type punning using union have undefined behavior with undefined float
-    // size
+    // HACK: Type punning using union have undefined behavior with undefined
+    // float size. Don't delete the following lines without assuring that a
+    // float32 is being used in another way.
     assert(CHAR_BIT * sizeof(float) == 32);
     assert(CHAR_BIT == 8);
     // Type punning through union
@@ -170,9 +176,6 @@ public:
 
     } floatToUint8Converter;
     for (size_t point_i = 0; point_i < ros_msg_pcl->width; point_i++) {
-      // if (point_i % 3 != 0) {
-      //   continue;
-      // }
       for (size_t field_i = 0; field_i < ros_msg_pcl->fields.size; field_i++) {
         switch (field_i % ros_msg_pcl->fields.size) {
         case 0:

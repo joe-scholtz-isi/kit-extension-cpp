@@ -19,6 +19,11 @@
                 "description": "True to enable the lidar helper, False to disable",
                 "default": true
             },
+            "verbose": {
+                "type": "bool",
+                "description": "Print debug info to the terminal",
+                "default": false
+            },
             "context" : {
                 "type" : "uint64",
                 "description": "HAVE TO BE IMPLEMENTED. ROS2 context handle, default of zero will use the global context",

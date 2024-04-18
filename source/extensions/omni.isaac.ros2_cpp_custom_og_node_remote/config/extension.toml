@@ -1,0 +1,47 @@
+[package]
+version = "1.0.0" # Semantic Versioning is used: https://semver.org/
+
+# These fields are used primarily for display in the extension browser UI.
+title = "Custom ROS2 OmniGraph Node"
+description = "Custom ROS2 C++ node for OmniGraph"
+category = "Graph"
+keywords = ["ROS2", "RTX", "LiDAR", "C++", "cpp", "python", "Python", "Graph", "Node", "OmniGraph"]
+icon = "data/icon.png"
+preview_image = "data/preview.png"
+changelog = "docs/CHANGELOG.md"
+readme  = "docs/README.md"
+authors = ["Joe Ferreira Scholtz <joefscholtz@gmail.com>"]
+
+[dependencies]
+"omni.usd" = {}
+"omni.graph.core" = {}
+"omni.graph.tools" = {}
+# Imported from omni.isaac.ros2_bridge
+# "omni.kit.uiapp" = {}
+# "omni.isaac.dynamic_control" = {}
+# "omni.isaac.range_sensor" = {}
+# "omni.isaac.core" = {}
+# "omni.isaac.core_nodes" = {}
+# "omni.syntheticdata" = {}
+# "omni.replicator.core" = {}
+# "omni.usd.schema.isaac" = {}
+# "omni.graph" = {}
+# "omni.graph.tools" = {}
+# "omni.isaac.sensor" = {}
+# "usdrt.scenegraph" = {}
+
+[[python.module]]
+name = "omni.isaac.ros2_cpp_custom_og_node"
+
+[fswatcher.patterns]
+include = ["*.ogn", "*.py", "*.toml"]
+exclude = ["Ogn*Database.py"]
+
+[[native.plugin]]
+path = "bin/*.plugin"
+
+[documentation]
+pages = [
+    "docs/Overview.md",
+    "docs/CHANGELOG.md",
+]
